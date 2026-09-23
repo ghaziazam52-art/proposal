@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>A Little Mystery for Tejaswi</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@300;400;600&family=Playfair+Display:ital,wght@0,700;1,700&display=swap">
+  <style>
+    :root {
+      --bg: #fffafa;
+      --surface: #ffffff;
+      --text-main: #4a3f3f;
+      --text-muted: #8c7e7e;
+      --accent: #ff4d6d;
+      --accent-soft: #ffe5ec;
+      --accent-dark: #c9184a;
+      --border: #f0e6e6;
+      --shadow: rgba(255, 77, 109, 0.15);
+
+      --font-display: 'Dancing Script', cursive;
+      --font-serif: 'Playfair Display', serif;
+      --font-sans: 'Outfit', sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #1a1616;
+        --surface: #241e1e;
+        --text-main: #eee2e2;
+        --text-muted: #b0a3a3;
+        --accent: #ff758f;
+        --accent-soft: #3d2b35;
+        --accent-dark: #ffb3c1;
+        --border: #332a2a;
+        --shadow: rgba(0, 0, 0, 0.4);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      height: 100vh;
+    }
+
+    /* Layered View System */
+    .layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 24px;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .layer.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.9) translateY(20px);
+      z-index: 0;
+    }
+
+    .layer.active {
+      opacity: 1;
+      pointer-events: all;
+      transform: scale(1) translateY(0);
+      z-index: 2;
+    }
+
+    /* Layer 1: The Hook */
+    .envelope-wrapper {
+      cursor: pointer;
+      position: relative;
+      width: 200px;
+      height: 140px;
+      background: var(--accent-soft);
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 10px 30px var(--shadow);
+      transition: transform 0.3s ease;
+    }
+    .envelope-wrapper:hover { transform: scale(1.05) rotate(-2deg); }
+    .envelope-flap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 100px solid transparent;
+      border-right: 100px solid transparent;
+      border-top: 70px solid var(--accent);
+      z-index: 2;
+      transition: transform 0.5s ease;
+      transform-origin: top;
+    }
+    .envelope-wrapper.open .envelope-flap {
+      transform: rotateX(180deg);
+    }
+    .envelope-letter {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      right: 10px;
+      height: 100px;
+      background: white;
+      border-radius: 5px;
+      z-index: 1;
+      transition: transform 0.5s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      color: var(--accent);
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+    }
+    .envelope-wrapper.open .envelope-letter {
+      transform: translateY(-80px);
+    }
+
+    /* Layer 2: The Playful Interaction */
+    .game-container {
+      background: var(--surface);
+      border: 2px dashed var(--accent);
+      border-radius: 30px;
+      padding: 40px;
+      box-shadow: 0 20px 50px var(--shadow);
+      max-width: 500px;
+      width: 100%;
+    }
+    .btn-group {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 30px;
+      position: relative;
+      height: 60px;
+    }
+    .choice-btn {
+      padding: 12px 30px;
+      border-radius: 50px;
+      border: none;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-yes { background: var(--accent); color: white; }
+    .btn-no { background: var(--border); color: var(--text-muted); position: relative; }
+
+    /* Layer 3: The Grand Reveal */
+    .proposal-card {
+      background: var(--surface);
+      border-radius: 40px;
+      padding: 40px;
+      box-shadow: 0 30px 60px var(--shadow);
+      max-width: 500px;
+      width: 100%;
+      border: 1px solid var(--border);
+    }
+    h1 {
+      font-family: var(--font-display);
+      font-size: 3rem;
+      color: var(--accent);
+      margin: 0 0 1rem 0;
+      text-wrap: balance;
+    }
+    .letter-content {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+
+    /* Input Area */
+    .insta-box {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      animation: slideUp 0.8s ease-out;
+    }
+    input {
+      width: 100%;
+      padding: 15px;
+      border-radius: 50px;
+      border: 2px solid var(--border);
+      background: var(--bg);
+      color: var(--text-main);
+      text-align: center;
+      font-size: 1rem;
+      outline: none;
+    }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+    .submit-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 50px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 5px 15px var(--shadow);
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .floating-decor {
+      position: fixed;
+      pointer-events: none;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LAYER 1: THE MYSTERY ENVELOPE -->
+  <div class="layer active" id="layer1">
+    <h2 style="font-family: var(--font-serif); font-style: italic; margin-bottom: 50px;">You have a secret message, Tejaswi...</h2>
+    <div class="envelope-wrapper" id="envelope">
+      <div class="envelope-flap"></div>
+      <div class="envelope-letter">For You ❤️</div>
+    </div>
+    <p style="margin-top: 30px; color: var(--text-muted); font-size: 0.9rem;">Click to open</p>
+  </div>
+
+  <!-- LAYER 2: THE PLAYFUL TEST -->
+  <div class="layer hidden" id="layer2">
+    <div class="game-container">
+      <h2 style="font-family: var(--font-serif);">Wait! Before you read it...</h2>
+      <p>Do you think Ghazi is a decent guy? 😉</p>
+      <div class="btn-group">
+        <button class="choice-btn btn-yes" id="yesBtn">Yes, he is!</button>
+        <button class="choice-btn btn-no" id="noBtn">Hmm, not sure</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAYER 3: THE FINAL REVEAL -->
+  <div class="layer hidden" id="layer3">
+    <div class="proposal-card">
+      <h1>Tejaswi...</h1>
+      <div class="letter-content">
+        I couldn't just send a normal message. I wanted to make you smile first. <br><br>
+        The truth is, you've been on my mind a lot lately. There's something about your vibe that's just... different. Brighter. Better. <br><br>
+        I'd love to stop wondering and start talking. <strong>Would you let me into your world?</strong>
+      </div>
+
+      <div class="insta-box" id="instaBox">
+        <input type="text" id="instaId" placeholder="Drop your Instagram ID here ✨">
+        <button class="submit-btn" id="submitBtn">Let's Connect! ❤️</button>
+      </div>
+      <div id="successMsg" style="display:none; font-family: var(--font-display); font-size: 1.5rem; color: var(--accent); margin-top: 20px;">
+        The best decision you've made today! See you there. ✨
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const l1 = document.getElementById('layer1');
+    const l2 = document.getElementById('layer2');
+    const l3 = document.getElementById('layer3');
+    const envelope = document.getElementById('envelope');
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // 1. Open Envelope -> Go to Layer 2
+    envelope.addEventListener('click', () => {
+      envelope.classList.add('open');
+      setTimeout(() => {
+        l1.classList.add('hidden');
+        l1.classList.remove('active');
+        l2.classList.add('active');
+        l2.classList.remove('hidden');
+      }, 1200);
+    });
+
+    // 2. Playful No Button (Avoidance)
+    noBtn.addEventListener('mouseover', () => {
+      const x = Math.random() * (window.innerWidth - 100);
+      const y = Math.random() * (window.innerHeight - 50);
+      noBtn.style.position = 'fixed';
+      noBtn.style.left = x + 'px';
+      noBtn.style.top = y + 'px';
+    });
+
+    // 3. Yes Button -> Go to Layer 3
+    yesBtn.addEventListener('click', () => {
+      l2.classList.add('hidden');
+      l2.classList.remove('active');
+      l3.classList.add('active');
+      l3.classList.remove('hidden');
+    });
+
+    // 4. Final Submission
+    submitBtn.addEventListener('click', () => {
+      const id = document.getElementById('instaId').value;
+      if(id.trim()) {
+        document.getElementById('instaBox').style.display = 'none';
+        document.getElementById('successMsg').style.display = 'block';
+        createHeartsBurst();
+      } else {
+        alert('Don\'t be shy! Your ID please ❤️');
+      }
+    });
+
+    function createHeartsBurst() {
+      for(let i=0; i<50; i++) {
+        const heart = document.createElement('div');
+        heart.innerHTML = '❤️';
+        heart.className = 'floating-decor';
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.top = '100vh';
+        heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+        heart.style.transition = `all ${Math.random() * 2 + 2}s ease-out`;
+        document.body.appendChild(heart);
+
+        setTimeout(() => {
+          heart.style.top = '-10vh';
+          heart.style.left = (parseFloat(heart.style.left) + (Math.random() * 20 - 10)) + 'vw';
+          heart.style.opacity = '0';
+        }, 10);
+
+        setTimeout(() => heart.remove(), 4000);
+      }
+    }
+  </script>
+</body>
+</html>
